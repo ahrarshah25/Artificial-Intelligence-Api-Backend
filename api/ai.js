@@ -13,7 +13,7 @@ export default async function handler(req, res) {
     }
 
     const prompt = req.query.prompt;
-    if (!prompt) return res.status(400).send("Prompt is required");
+    if (!prompt) return res.status(400).json({ error: "Prompt is required" });
 
     const COHERE_API_KEY = process.env.COHERE_API_KEY;
 
@@ -38,10 +38,10 @@ export default async function handler(req, res) {
     // Sirf assistant ka text extract karo
     const aiText = data?.message?.content?.[0]?.text || "No response from AI";
 
-    // Sirf simple text return karo
-    res.status(200).send(aiText);
+    // ✅ Return JSON
+    res.status(200).json({ result: aiText });
 
   } catch (err) {
-    res.status(500).send("Error: " + err.message);
+    res.status(500).json({ error: err.message });
   }
 }
