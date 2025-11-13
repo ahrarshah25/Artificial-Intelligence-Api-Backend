@@ -22,30 +22,23 @@ export default async function handler(req, res) {
   try {
     const COHERE_KEY = process.env.COHERE_API_KEY;
 
-    const resp = await fetch("https://api.cohere.ai/v1/generate", {
+    // ✅ new Cohere Chat API endpoint
+    const resp = await fetch("https://api.cohere.ai/v1/chat", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${COHERE_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        // ✅ change model to "command"
-        model: "command",
-        prompt: prompt,
-        max_tokens: 150,
-        temperature: 0.7, // optional but helps get text
+        model: "command-r", // or "command-r-plus" if available
+        message: prompt,
       }),
     });
 
     const data = await resp.json();
 
-    // ✅ log for debugging (remove later)
-    console.log("Cohere response:", data);
-
-    const text =
-      data.generations && data.generations.length > 0
-        ? data.generations[0].text.trim()
-        : JSON.stringify(data, null, 2); // fallback to show raw response
+    // ✅ Chat API returns response.text field
+    const text = data.text?.trim() || JSON.stringify(data, null, 2);
 
     res.status(200).json({ ok: true, output: text });
   } catch (err) {
