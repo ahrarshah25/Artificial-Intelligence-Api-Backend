@@ -9,11 +9,11 @@ export default async function handler(req, res) {
 
   if (req.method === "OPTIONS") return res.status(204).end();
 
-  // Get prompt safely
-  let prompt = req.method === "POST" ? req.body.prompt : req.query.prompt;
+  // GET or POST prompt
+  let prompt = req.method === "POST" ? req.body?.prompt : req.query?.prompt;
 
-  // ✅ Fallback to default if empty or whitespace
-  if (!prompt || !prompt.trim()) {
+  // ✅ fallback for empty, null, undefined, or only whitespace
+  if (!prompt || typeof prompt !== "string" || !prompt.trim()) {
     prompt = "Hello world";
   } else {
     prompt = prompt.trim();
@@ -21,13 +21,8 @@ export default async function handler(req, res) {
 
   try {
     const COHERE_KEY = process.env.COHERE_API_KEY;
-    if (!COHERE_KEY) {
-      return res
-        .status(500)
-        .json({ ok: false, output: "Cohere API key not set in environment" });
-    }
+    if (!COHERE_KEY) throw new Error("COHERE_API_KEY not set in env");
 
-    // Call Cohere Chat API
     const response = await fetch("https://api.cohere.ai/v1/chat", {
       method: "POST",
       headers: {
@@ -44,10 +39,9 @@ export default async function handler(req, res) {
 
     const data = await response.json();
 
-    // ✅ Extract safe response
+    // ✅ Safe extraction
     const text =
-      data.choices?.[0]?.message?.content?.trim() ||
-      JSON.stringify(data, null, 2);
+      data?.choices?.[0]?.message?.content?.trim() || JSON.stringify(data, null, 2);
 
     res.status(200).json({ ok: true, output: text });
   } catch (err) {
