@@ -1,22 +1,21 @@
+// pages/api/ai.js
 import fetch from "node-fetch";
 
 export default async function handler(req, res) {
-  // CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
   if (req.method === "OPTIONS") return res.status(204).end();
 
-  // Get prompt
   let prompt =
     req.method === "POST" ? req.body.prompt : req.query.prompt;
-  if (!prompt || !prompt.trim()) prompt = "Hello world"; // default
+  if (!prompt || !prompt.trim()) prompt = "Hello world";
 
   try {
     const COHERE_KEY = process.env.COHERE_API_KEY;
 
-    const resp = await fetch("https://api.cohere.ai/v1/chat", {
+    const response = await fetch("https://api.cohere.ai/v1/chat", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${COHERE_KEY}`,
@@ -24,14 +23,15 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         model: "command-r-plus-08-2024",
-        messages: [{ role: "user", content: prompt.trim() }], // safe trim
+        messages: [{ role: "user", content: prompt.trim() }],
         max_tokens: 150,
-        temperature: 0.7,
+        temperature: 0.7
       }),
     });
 
-    const data = await resp.json();
+    const data = await response.json();
 
+    // Extract assistant message safely
     const text =
       data.choices?.[0]?.message?.content?.trim() ||
       JSON.stringify(data, null, 2);
